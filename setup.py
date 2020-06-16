@@ -4,7 +4,9 @@
 import ast
 from io import open
 import re
-from setuptools import setup, find_packages
+import sys
+import subprocess
+from setuptools import Command, setup, find_packages
 
 _version_re = re.compile(r"__version__\s+=\s+(.*)")
 
@@ -25,8 +27,8 @@ readme = open_file("README.md")
 install_requirements = [
     "click >= 4.1",
     "Pygments >= 1.6",
-    "prompt_toolkit>=3.0.3,<4.0.0",
-    "sqlparse",
+    "prompt_toolkit>=2.0.0,<2.1.0",
+    "sqlparse>=0.2.2,<0.3.0",
     "configobj >= 5.0.5",
     "cli_helpers[styles] >= 1.0.1",
 ]

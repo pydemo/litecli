@@ -1,11 +1,9 @@
-from __future__ import unicode_literals, print_function
-import csv
+from __future__ import unicode_literals
 import logging
 import os
-import sys
 import platform
 import shlex
-from sqlite3 import ProgrammingError
+from pysqlite2.dbapi2 import ProgrammingError
 
 from litecli import __version__
 from litecli.packages.special import iocommands
@@ -218,56 +216,3 @@ def read_script(cur, arg, **_):
         script = f.read()
         cur.executescript(script)
     return [(None, None, None, "")]
-
-
-@special_command(
-    ".import",
-    ".import filename table",
-    "Import data from filename into an existing table",
-    arg_type=PARSED_QUERY,
-    case_sensitive=True,
-)
-def import_file(cur, arg=None, **_):
-    def split(s):
-        # this is a modification of shlex.split function, just to make it support '`',
-        # because table name might contain '`' character.
-        lex = shlex.shlex(s, posix=True)
-        lex.whitespace_split = True
-        lex.commenters = ""
-        lex.quotes += "`"
-        return list(lex)
-
-    args = split(arg)
-    log.debug("[arg = %r], [args = %r]", arg, args)
-    if len(args) != 2:
-        raise TypeError("Usage: .import filename table")
-
-    filename, table = args
-    cur.execute('PRAGMA table_info("%s")' % table)
-    ncols = len(cur.fetchall())
-    insert_tmpl = 'INSERT INTO "%s" VALUES (?%s)' % (table, ",?" * (ncols - 1))
-
-    with open(filename, "r") as csvfile:
-        dialect = csv.Sniffer().sniff(csvfile.read(1024))
-        csvfile.seek(0)
-        reader = csv.reader(csvfile, dialect)
-
-        cur.execute("BEGIN")
-        ninserted, nignored = 0, 0
-        for i, row in enumerate(reader):
-            if len(row) != ncols:
-                print(
-                    "%s:%d expected %d columns but found %d - ignored"
-                    % (filename, i, ncols, len(row)),
-                    file=sys.stderr,
-                )
-                nignored += 1
-                continue
-            cur.execute(insert_tmpl, row)
-            ninserted += 1
-        cur.execute("COMMIT")
-
-    status = "Inserted %d rows into %s" % (ninserted, table)
-    if nignored > 0:
-        status += " (%d rows are ignored)" % nignored
-    return [(None, None, None, status)]

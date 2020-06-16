@@ -1,8 +1,8 @@
 import logging
-import sqlite3
+from pysqlite2 import dbapi2 as sqlite3
 import uuid
 from contextlib import closing
-from sqlite3 import OperationalError
+from pysqlite2.dbapi2 import OperationalError
 
 import sqlparse
 import os.path

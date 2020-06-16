@@ -1,4 +1,5 @@
 from __future__ import print_function
+import os
 import sys
 import sqlparse
 from sqlparse.sql import Comparison, Identifier, Where
@@ -80,11 +81,7 @@ def suggest_type(full_text, text_before_cursor):
         # Be careful here because trivial whitespace is parsed as a statement,
         # but the statement won't have a first token
         tok1 = statement.token_first()
-        if tok1 and tok1.value.startswith("."):
-            return suggest_special(text_before_cursor)
-        elif tok1 and tok1.value.startswith("\\"):
-            return suggest_special(text_before_cursor)
-        elif tok1 and tok1.value.startswith("source"):
+        if tok1 and tok1.value in [".", "\\", "source"]:
             return suggest_special(text_before_cursor)
         elif text_before_cursor and text_before_cursor.startswith(".open "):
             return suggest_special(text_before_cursor)
@@ -119,34 +116,10 @@ def suggest_special(text):
             {"type": "view", "schema": []},
             {"type": "schema"},
         ]
-
-    if cmd in ["\\.", "source", ".open"]:
+    elif cmd in ["\\.", "source", ".open"]:
         return [{"type": "file_name"}]
 
-    if cmd in [".import"]:
-        # Usage: .import filename table
-        if _expecting_arg_idx(arg, text) == 1:
-            return [{"type": "file_name"}]
-        else:
-            return [{"type": "table", "schema": []}]
-
     return [{"type": "keyword"}, {"type": "special"}]
-
-
-def _expecting_arg_idx(arg, text):
-    """Return the index of expecting argument.
-
-    >>> _expecting_arg_idx("./da", ".import ./da")
-    1
-    >>> _expecting_arg_idx("./data.csv", ".import ./data.csv")
-    1
-    >>> _expecting_arg_idx("./data.csv", ".import ./data.csv ")
-    2
-    >>> _expecting_arg_idx("./data.csv t", ".import ./data.csv t")
-    2
-    """
-    args = arg.split()
-    return len(args) + int(text[-1].isspace())
 
 
 def suggest_based_on_last_token(token, text_before_cursor, full_text, identifier):

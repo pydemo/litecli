@@ -1,5 +1,5 @@
 # litecli 1.2.0
-
+```
 fix for CSV vtable extension
 
 echo -e 'col_text,col_int\napples,3\noranges,5' > sample.csv
@@ -30,7 +30,7 @@ mycool.db> select * from t1;
 2 rows in set
 Time: 0.029s
 mycool.db>
-
+```
 
 
 [![Build Status](https://travis-ci.org/dbcli/litecli.svg?branch=master)](https://travis-ci.org/dbcli/litecli)
